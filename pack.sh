@@ -2,10 +2,13 @@
 # Recreate the Claude skill archive from this repo.
 set -eu
 cd "$(dirname "$0")"
-rm -f perf-verifier.skill
-mkdir -p .pack/perf-verifier/scripts
-cp SKILL.md .pack/perf-verifier/SKILL.md
-cp scripts/pf.py .pack/perf-verifier/scripts/pf.py
-(cd .pack && zip -r ../perf-verifier.skill perf-verifier)
-rm -rf .pack
-echo "wrote perf-verifier.skill"
+python3 - << 'PY'
+import zipfile
+from pathlib import Path
+root = Path('.')
+out = root / 'perf-verifier.skill'
+with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED) as z:
+    z.write(root / 'SKILL.md', 'perf-verifier/SKILL.md')
+    z.write(root / 'scripts' / 'pf.py', 'perf-verifier/scripts/pf.py')
+print('wrote', out)
+PY
