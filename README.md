@@ -3,7 +3,7 @@
 ## Stop trusting "I made it faster."
 
 AI coding agents love to say they optimized your code. Most of the time they
-speeded up the wrong thing, stopped at the first patch that passed, or quietly
+sped up the wrong thing, stopped at the first patch that passed, or quietly
 changed the output.
 
 **Perf Verifier makes Claude prove it.**
