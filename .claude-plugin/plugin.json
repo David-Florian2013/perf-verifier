@@ -1,0 +1,13 @@
+{
+  "name": "perf-verifier",
+  "version": "1.0.0",
+  "description": "Do not call code faster without a measurement. Scan, profile, and compare before and after.",
+  "author": {
+    "name": "David-Florian2013",
+    "url": "https://github.com/David-Florian2013"
+  },
+  "homepage": "https://github.com/David-Florian2013/perf-verifier",
+  "repository": "https://github.com/David-Florian2013/perf-verifier",
+  "license": "MIT",
+  "keywords": ["skills", "performance", "python", "agent-skills"]
+}

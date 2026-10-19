@@ -1,0 +1,15 @@
+# perf-verifier
+
+One Agent Skill plus a Python 3 script. No third-party package. The script does not import a network library.
+
+Repo: https://github.com/David-Florian2013/perf-verifier
+
+Install:
+
+npx skills add David-Florian2013/perf-verifier -g -a '*' -y
+
+Do not call code faster without a measurement. scan flags patterns such as a list copied inside a loop. bench, profile, scale and compare print times. FASTER is the only compare result that supports the word "faster".
+
+The demo runs scan on examples/slow.py and examples/fast.py. slow.py copies the list on every iteration. fast.py appends. The scan output is the locked transcript. Timings are not, because they change per machine.
+
+MIT.

@@ -1,0 +1,19 @@
+{
+  "name": "perf-verifier",
+  "owner": {
+    "name": "David-Florian2013",
+    "url": "https://github.com/David-Florian2013"
+  },
+  "metadata": {
+    "description": "One skill. A scan, a profile, and a before/after check. No speedup claim without a measurement."
+  },
+  "plugins": [
+    {
+      "name": "perf-verifier",
+      "source": "./",
+      "description": "Measure a performance change instead of calling it faster.",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ]
+}

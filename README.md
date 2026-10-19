@@ -1,68 +1,104 @@
-# Perf Verifier
+# perf-verifier
 
-## Stop trusting "I made it faster."
+Don't call it faster until something measured it.
 
-AI coding agents love to say they optimized your code. Most of the time they
-sped up the wrong thing, stopped at the first patch that passed, or quietly
-changed the output.
+<p align="center">
+  <img src="docs/banner.png" alt="Don't say faster. Measure it. The scan flags a list copied on every iteration." width="100%">
+</p>
 
-**Perf Verifier makes Claude prove it.**
-
-Install it once, and every time you say "make this faster", Claude will:
-
-- **Profile first**: find the real bottleneck, and tell you the maximum speedup possible
-- **Measure before and after**: alternating runs and a statistical test, not a single lucky timing
-- **Check the output didn't change**: and run your tests
-- **Show how it scales**: so a quadratic that became linear is real, not a fluke
-- **Refuse to claim a speedup it can't show**
-
-### What you get
-
-One small Python script, zero dependencies, runs 100% locally.
-
-Read the whole thing in five minutes, then decide.
-
-### Install (30 seconds)
-
-1. Download [`perf-verifier.skill`](./perf-verifier.skill) (or run `sh pack.sh` after cloning)
-2. Upload it in Claude's Skills settings
-3. Ask Claude to optimize something
-
-Free, MIT licensed. If it saves you from one fake optimization, it paid for itself.
-
----
-
-## Use it without Claude
-
-Needs only Python 3 (Linux or macOS).
+[`slow.py`](examples/slow.py) rebuilds a list on every pass. [`fast.py`](examples/fast.py) appends. Same printed length. The script flags the slow one. It does not import a network library.
 
 ```bash
-python3 scripts/pf.py bench --cmd 'python3 examples/slow.py 8000'
-python3 scripts/pf.py profile -- python3 examples/slow.py 8000
-python3 scripts/pf.py scan examples/
-python3 scripts/pf.py scale --sizes 2000,4000,8000,16000 --cmd 'python3 examples/slow.py {N}'
-python3 scripts/pf.py compare --a 'python3 examples/slow.py 8000' --b 'python3 examples/fast.py 8000' --expect faster
-python3 scripts/pf.py check --cmd 'python3 examples/fast.py 8000' --expect faster
+npx skills add David-Florian2013/perf-verifier -g -a '*' -y
 ```
 
-`PF` in the skill means `python3 scripts/pf.py`. `--cmd` takes the command as one quoted string; everything after a bare `--` is also read as the command.
+## See it run
 
-### Reading the verdict
+No model is called. This is a scan, not a timer.
 
-- `FASTER` / `SLOWER`: the difference passed the test (p < 0.05) and exceeded the measured noise. Only `FASTER` supports saying "faster".
-- `NO MEASURABLE DIFFERENCE`: the change did nothing you can show.
-- `OUTPUT DIFFERENT`: the two versions print different results. This is a failure, not a speedup.
-- `NOT PROVEN` and `UNMEASURED` mean no claim of speedup is allowed.
+<p align="center">
+  <img src="docs/demo-terminal.png" alt="Terminal: MEDIUM PY-LIST-CONCAT-LOOP on examples/slow.py line 8." width="100%">
+</p>
 
-Full workflow: [`SKILL.md`](./SKILL.md).
+```text
+$ python3 scripts/demo.py
+perf-verifier
+command: python3 scripts/pf.py scan examples/slow.py examples/fast.py
+model: none    network: none
 
-## Why this exists
+scan: 1 slow-pattern finding(s) in 2 file(s) (explicit paths)
+  MEDIUM examples/slow.py:8  PY-LIST-CONCAT-LOOP  `s = s + [...]` copies the whole list every iteration (quadratic)  -> use `s.append(...)` / `s.extend(...)`
+```
 
-Language models write code that is slower than expert code, and coding agents
-optimising real repositories fail in three documented ways: they optimise
-something that is not the bottleneck, they stop after the first patch that
-passes, and they do not test enough, so results change. In a 30-run study with
-a Mann-Whitney test, only about 6% of solutions labelled "faster" were
-measurably faster.
+A finding is a pattern. It is not a measured speedup. `fast.py` is the shape the finding points at. To time them on your machine:
 
-This repo gives you numbers instead of a feeling.
+```bash
+python3 scripts/pf.py compare --runs 5 --budget 8 \
+  --a 'python3 examples/slow.py 4000' \
+  --b 'python3 examples/fast.py 4000' \
+  --expect faster
+```
+
+The milliseconds change every run, so they are not in the transcript CI checks. Only `FASTER` from that command supports saying "faster".
+
+[![CI](https://github.com/David-Florian2013/perf-verifier/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/David-Florian2013/perf-verifier/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/David-Florian2013/perf-verifier)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/David-Florian2013/perf-verifier)](https://github.com/David-Florian2013/perf-verifier/releases)
+
+## Install
+
+Every agent the [skills CLI](https://github.com/vercel-labs/skills) knows:
+
+```bash
+npx skills add David-Florian2013/perf-verifier -g -a '*' -y
+```
+
+One agent:
+
+```bash
+npx skills add David-Florian2013/perf-verifier -g -a claude-code -y
+npx skills add David-Florian2013/perf-verifier -g -a codex -y
+npx skills add David-Florian2013/perf-verifier -g -a cursor -y
+```
+
+`./install.sh` copies `SKILL.md` and `scripts/pf.py` into `~/.claude/skills/perf-verifier`. CI runs that against an empty directory.
+
+GitHub CLI 2.90.0 or newer:
+
+```bash
+gh skill install David-Florian2013/perf-verifier perf-verifier --agent claude-code --scope user
+```
+
+Or download `perf-verifier.skill` from the [latest release](https://github.com/David-Florian2013/perf-verifier/releases/latest). It is a zip. Unzip it into the skills folder for the agent you use.
+
+## What you get
+
+| File | What it is |
+|---|---|
+| [`SKILL.md`](SKILL.md) | When to scan, profile, and compare, and which words may follow which result |
+| [`scripts/pf.py`](scripts/pf.py) | `scan`, `bench`, `profile`, `scale`, `compare`, `check` |
+| [`examples/slow.py`](examples/slow.py) | `s = s + [i]` inside the loop |
+| [`examples/fast.py`](examples/fast.py) | `s.append(i)` |
+
+Needs Python 3. No third-party package. `profile` runs on Python and Node commands. `bench`, `scale` and `compare` run any command.
+
+## Limits
+
+- The scan list is in `pf.py`. A hit is a hypothesis. The skill says to act on it only when it sits on the profiled hot path.
+- This repo does not cite a rate of false speedups. There is no study number here.
+- The two examples are fixtures. They are not a trace from a model.
+- Compare uses a budget. Few runs means a weak test, and the script says so.
+- Nothing here can force the agent to run the script. The instruction says to. The script is the part you can re-run.
+
+## Claude Code plugin
+
+```text
+/plugin marketplace add David-Florian2013/perf-verifier
+/plugin install perf-verifier@perf-verifier
+```
+
+`./install.sh` is the path CI checks.
+
+## License
+
+[MIT](LICENSE).

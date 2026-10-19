@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skill file and zip match
+        run: |
+          python3 - << 'PY'
+          import zipfile
+          from pathlib import Path
+          text = Path("SKILL.md").read_text()
+          assert text.startswith("---\n")
+          head = text.split("---", 2)[1]
+          assert "name: perf-verifier" in head
+          assert "30-run" not in text
+          assert "6%" not in text
+          script = Path("scripts/pf.py").read_bytes()
+          z = zipfile.ZipFile("perf-verifier.skill")
+          assert z.namelist() == ["perf-verifier/SKILL.md", "perf-verifier/scripts/pf.py"], z.namelist()
+          assert z.read("perf-verifier/SKILL.md").decode() == text
+          assert z.read("perf-verifier/scripts/pf.py") == script
+          readme = Path("README.md").read_text()
+          assert "30-run" not in readme and "6%" not in readme
+          print("ok")
+          PY
+      - name: install.sh into an empty directory
+        run: |
+          dest=$(mktemp -d)
+          CLAUDE_SKILLS_DIR="$dest" ./install.sh
+          test -f "$dest/perf-verifier/SKILL.md"
+          test -f "$dest/perf-verifier/scripts/pf.py"
+          grep -q "name: perf-verifier" "$dest/perf-verifier/SKILL.md"
+      - name: demo matches the transcript
+        run: |
+          python3 scripts/demo.py > /tmp/demo.out
+          diff -u docs/demo-transcript.txt /tmp/demo.out
+          python3 - << 'PY'
+          from pathlib import Path
+          out = Path("docs/demo-transcript.txt").read_text().strip()
+          readme = Path("README.md").read_text()
+          if out not in readme:
+              raise SystemExit("README does not contain the demo transcript")
+          print("demo matches readme")
+          PY

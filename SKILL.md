@@ -5,7 +5,7 @@ description: Makes performance work evidence-based instead of guesswork. Use whe
 
 # Perf Verifier
 
-Language models write code that is slower than expert code (about 3x the run time of reference solutions in one benchmark), and coding agents optimising real repositories fail in three documented ways: they optimise something that is not the bottleneck, they stop after the first patch that passed, and they do not test enough, so results change. Speedup claims are also unreliable: in a 30-run study with a Mann-Whitney test, only about 6% of solutions labelled "faster" were measurably faster. This skill gives you numbers to act on instead of a feeling.
+Do not call code faster without a measurement. Profile first, compare the old command with the new one, and check the output did not change. If nothing was measured, say so. A scan finding is a hypothesis, not a speedup.
 
 `PF` means `python3 <this skill's directory>/scripts/pf.py`. It needs only Python 3 (Linux or macOS). `--cmd` takes the command as one quoted string; everything after a bare `--` is also read as the command.
 

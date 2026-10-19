@@ -1,0 +1,6 @@
+perf-verifier
+command: python3 scripts/pf.py scan examples/slow.py examples/fast.py
+model: none    network: none
+
+scan: 1 slow-pattern finding(s) in 2 file(s) (explicit paths)
+  MEDIUM examples/slow.py:8  PY-LIST-CONCAT-LOOP  `s = s + [...]` copies the whole list every iteration (quadratic)  -> use `s.append(...)` / `s.extend(...)`
